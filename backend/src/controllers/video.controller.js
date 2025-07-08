@@ -7,10 +7,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 9, query, sortBy, sortType } = req.query;
-
-  const pageNum = parseInt(page);
-  const limitNum = parseInt(limit);
+  const { query, sortBy, sortType } = req.query;
 
   const matchStage = query
     ? { description: { $regex: query, $options: "i" } }
@@ -23,8 +20,6 @@ const getAllVideos = asyncHandler(async (req, res) => {
         [sortBy || "createdAt"]: sortType === "asc" ? 1 : -1,
       },
     },
-    { $skip: (pageNum - 1) * limitNum },
-    { $limit: limitNum },
     {
       $lookup: {
         from: "users",
@@ -75,15 +70,14 @@ const getAllVideos = asyncHandler(async (req, res) => {
       v.thumbnail &&
       v.title &&
       v.ownerInfo &&
-      v.ownerInfo.fullName // ensure ownerInfo exists and is valid
+      v.ownerInfo.fullName
   );
-
-  // console.log("Sending cleaned videos to frontend:\n", JSON.stringify(cleanedVideos, null, 2));
 
   return res
     .status(200)
     .json(new apiResponse(200, cleanedVideos, "Videos fetched successfully"));
 });
+
 
 
 const publishAVideo = asyncHandler(async (req, res) => {
